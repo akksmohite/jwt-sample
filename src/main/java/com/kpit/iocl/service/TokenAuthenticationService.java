@@ -55,6 +55,7 @@ public class TokenAuthenticationService {
     String token = request.getHeader(HEADER_STRING);
     if (token != null) {
       // parse the token.
+    	try {
       String user = Jwts.parser()
           .setSigningKey(SECRET)
           .parseClaimsJws(token.replace(TOKEN_PREFIX, ""))
@@ -77,31 +78,23 @@ public class TokenAuthenticationService {
           //new UsernamePasswordAuthenticationToken(user, null, emptyList()) :
     	   new UsernamePasswordAuthenticationToken(principal, token, authorities) :
           null;
+    	} catch (SignatureException e) {
+      	  LOGGER.info("Invalid JWT signature.");
+      	  LOGGER.trace("Invalid JWT signature trace: {}", e);
+        } catch (MalformedJwtException e) {
+      	  LOGGER.info("Invalid JWT token.");
+      	  LOGGER.trace("Invalid JWT token trace: {}", e);
+        } catch (ExpiredJwtException e) {
+      	  LOGGER.info("Expired JWT token.");
+      	  LOGGER.trace("Expired JWT token trace: {}", e);
+        } catch (UnsupportedJwtException e) {
+      	  LOGGER.info("Unsupported JWT token.");
+      	  LOGGER.trace("Unsupported JWT token trace: {}", e);
+        } catch (IllegalArgumentException e) {
+      	  LOGGER.info("JWT token compact of handler are invalid.");
+      	  LOGGER.trace("JWT token compact of handler are invalid trace: {}", e);
+        }
     }
     return null;
-  }
-  
-  public static boolean validateToken(HttpServletRequest request) {
-      try {
-    	  String authToken = request.getHeader(HEADER_STRING);
-          Jwts.parser().setSigningKey(SECRET).parseClaimsJws(authToken.replace(TOKEN_PREFIX, ""));
-          return true;
-      } catch (SignatureException e) {
-    	  LOGGER.info("Invalid JWT signature.");
-    	  LOGGER.trace("Invalid JWT signature trace: {}", e);
-      } catch (MalformedJwtException e) {
-    	  LOGGER.info("Invalid JWT token.");
-    	  LOGGER.trace("Invalid JWT token trace: {}", e);
-      } catch (ExpiredJwtException e) {
-    	  LOGGER.info("Expired JWT token.");
-    	  LOGGER.trace("Expired JWT token trace: {}", e);
-      } catch (UnsupportedJwtException e) {
-    	  LOGGER.info("Unsupported JWT token.");
-    	  LOGGER.trace("Unsupported JWT token trace: {}", e);
-      } catch (IllegalArgumentException e) {
-    	  LOGGER.info("JWT token compact of handler are invalid.");
-    	  LOGGER.trace("JWT token compact of handler are invalid trace: {}", e);
-      }
-      return false;
   }
 }
